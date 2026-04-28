@@ -3,7 +3,8 @@ import numpy as np
 import plotly.graph_objects as go
 
 st.set_page_config(layout="wide")
-st.title("Dew Point – Analisi per scelta diluizione")
+st.title("DewPoint & diluizione")
+st.subtitle("Per campionamento conforme a UNI 13725:2022")
 
 # -----------------------------
 # Inizializza session_state per opzioni persistenti
