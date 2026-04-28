@@ -208,7 +208,7 @@ with col_box_right:
 green_fill  = 'rgba(40,167,69,0.25)'
 yellow_fill = 'rgba(255,193,7,0.30)'
 red_fill    = 'rgba(220,50,50,0.35)'
-"""
+
 # -----------------------------
 # GRAFICO 1 — DP vs Dil
 # -----------------------------
@@ -274,7 +274,7 @@ fig1.update_layout(
     title=None,
     margin=dict(t=20, b=40, l=40, r=20)
 )
-"""
+
 # -----------------------------
 # GRAFICO 2 — DP vs asse X selezionabile
 # Selettore SOPRA il grafico (in colonna separata)
