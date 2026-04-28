@@ -113,10 +113,6 @@ Dil_suggerita, score_suggerita, DP_suggerito = suggerisci_diluizione()
 
 # -----------------------------
 # COLORE SFONDO CONFORMITÀ
-# Logica zone (riferita al punto attuale DP_current vs T_min e T_EXT):
-#   DP < T_min            → zona verde (sicuro per trasporto)
-#   T_min <= DP < T_EXT   → zona gialla (rischio trasporto)
-#   DP >= T_EXT           → zona rossa (condensa immediata)
 # -----------------------------
 if DP_current < T_min:
     bg_color = "#d4edda"   # verde chiaro
@@ -199,95 +195,31 @@ with col_box_right:
 
 # -----------------------------
 # Colori zone grafici
-# Nuovo schema:
-#   Verde      → sotto T_min (linea nera)      — zona sicura
-#   Giallo     → tra T_min e T_EXT (arancione) — zona rischio
-#   Rosso      → sopra T_EXT                   — condensa immediata
 # -----------------------------
 green_fill  = 'rgba(40,167,69,0.25)'
 yellow_fill = 'rgba(255,193,7,0.30)'
 red_fill    = 'rgba(220,50,50,0.35)'
 
 # -----------------------------
-# GRAFICO 1 — DP vs Dil
+# Prepara valori per asse Diluizione (default)
 # -----------------------------
 Dil_values = np.arange(1.0, 10.01, 0.2)
-DP_vs_Dil = np.array([dew_point(T_EXT, T_camino, RH, d) for d in Dil_values])
-
-y_min = min(DP_vs_Dil.min(), T_EXT, T_min) - 5
-y_max = max(DP_vs_Dil.max(), T_EXT, T_min) + 5
-
-fig1 = go.Figure()
-
-# Zona verde: da y_min a T_min
-fig1.add_trace(go.Scatter(
-    x=np.concatenate([Dil_values, Dil_values[::-1]]),
-    y=np.concatenate([[T_min]*len(Dil_values), [y_min]*len(Dil_values)]),
-    fill='toself', fillcolor=green_fill,
-    line=dict(color='rgba(0,0,0,0)'),
-    hoverinfo='skip', showlegend=False
-))
-
-# Zona gialla: da T_min a T_EXT
-fig1.add_trace(go.Scatter(
-    x=np.concatenate([Dil_values, Dil_values[::-1]]),
-    y=np.concatenate([[T_EXT]*len(Dil_values), [T_min]*len(Dil_values)]),
-    fill='toself', fillcolor=yellow_fill,
-    line=dict(color='rgba(0,0,0,0)'),
-    hoverinfo='skip', showlegend=False
-))
-
-# Zona rossa: da T_EXT a y_max
-fig1.add_trace(go.Scatter(
-    x=np.concatenate([Dil_values, Dil_values[::-1]]),
-    y=np.concatenate([[y_max]*len(Dil_values), [T_EXT]*len(Dil_values)]),
-    fill='toself', fillcolor=red_fill,
-    line=dict(color='rgba(0,0,0,0)'),
-    hoverinfo='skip', showlegend=False
-))
-
-# Curva Dew Point
-fig1.add_trace(go.Scatter(
-    x=Dil_values, y=DP_vs_Dil,
-    mode="lines", line=dict(color="blue", width=3),
-    name="Dew Point"
-))
-
-# Linee orizzontali
-fig1.add_hline(y=DP_current, line_dash="dash", line_color="blue")
-fig1.add_hline(y=T_min,      line_dash="dash", line_color="black")
-fig1.add_hline(y=T_EXT,      line_dash="dash", line_color="orange")
-
-# Punto attuale
-fig1.add_trace(go.Scatter(
-    x=[Dil], y=[DP_current],
-    mode="markers", marker=dict(size=12, color="black"),
-    name="Punto attuale"
-))
-
-fig1.update_layout(
-    xaxis_title="Diluizione",
-    yaxis_title="Temperatura (°C)",
-    yaxis=dict(range=[y_min, y_max]),
-    template="plotly_white",
-    title=None,
-    margin=dict(t=20, b=40, l=40, r=20)
-)
 
 # -----------------------------
-# GRAFICO 2 — DP vs asse X selezionabile
-# Selettore SOPRA il grafico (in colonna separata)
+# GRAFICO principale (ora chiamato "Grafico")
+# Asse X di default = "Diluizione", ma è selezionabile
 # -----------------------------
-colG1, colG2 = st.columns(2)
+col_graph = st.container()
 
-with colG1:
-    st.plotly_chart(fig1, use_container_width=True)
+with col_graph:
+    asse_x = st.selectbox("Seleziona asse X (Grafico)", ["Diluizione", "RH", "T_camino", "T_EXT"], index=0)
 
-with colG2:
-    # Selettore asse X sopra il grafico 2
-    asse_x = st.selectbox("Seleziona asse X (Grafico 2)", ["RH", "T_camino", "T_EXT"])
-
-    if asse_x == "RH":
+    if asse_x == "Diluizione":
+        X_values = Dil_values
+        DP_vs_X = np.array([dew_point(T_EXT, T_camino, RH, d) for d in X_values])
+        x_label = "Diluizione"
+        X_current = Dil
+    elif asse_x == "RH":
         X_values = np.arange(5, 100, 5)
         DP_vs_X = np.array([dew_point(T_EXT, T_camino, rh, Dil) for rh in X_values])
         x_label = "Umidità relativa (%)"
@@ -297,84 +229,95 @@ with colG2:
         DP_vs_X = np.array([dew_point(T_EXT, tcam, RH, Dil) for tcam in X_values])
         x_label = "Temperatura camino (°C)"
         X_current = T_camino
-    else:
+    else:  # T_EXT
         X_values = np.arange(0, 41, 5)
         DP_vs_X = np.array([dew_point(text, T_camino, RH, Dil) for text in X_values])
         x_label = "Temperatura esterna (°C)"
         X_current = T_EXT
 
-    y2_min = min(DP_vs_X.min(), T_EXT, T_min) - 5
-    y2_max = max(DP_vs_X.max(), T_EXT, T_min) + 5
+    y_min = min(DP_vs_X.min(), T_EXT, T_min) - 5
+    y_max = max(DP_vs_X.max(), T_EXT, T_min) + 5
 
-    fig2 = go.Figure()
+    fig = go.Figure()
 
-    # Zona verde
-    fig2.add_trace(go.Scatter(
+    # Aree di zona con nome (per legenda di consultazione)
+    fig.add_trace(go.Scatter(
         x=np.concatenate([X_values, X_values[::-1]]),
-        y=np.concatenate([[T_min]*len(X_values), [y2_min]*len(X_values)]),
+        y=np.concatenate([[T_min]*len(X_values), [y_min]*len(X_values)]),
         fill='toself', fillcolor=green_fill,
         line=dict(color='rgba(0,0,0,0)'),
-        hoverinfo='skip', showlegend=False
+        hoverinfo='skip', name="Zona sicura (sotto T_min)"
     ))
 
-    # Zona gialla
-    fig2.add_trace(go.Scatter(
+    fig.add_trace(go.Scatter(
         x=np.concatenate([X_values, X_values[::-1]]),
         y=np.concatenate([[T_EXT]*len(X_values), [T_min]*len(X_values)]),
         fill='toself', fillcolor=yellow_fill,
         line=dict(color='rgba(0,0,0,0)'),
-        hoverinfo='skip', showlegend=False
+        hoverinfo='skip', name="Zona rischio (tra T_min e T_EXT)"
     ))
 
-    # Zona rossa
-    fig2.add_trace(go.Scatter(
+    fig.add_trace(go.Scatter(
         x=np.concatenate([X_values, X_values[::-1]]),
-        y=np.concatenate([[y2_max]*len(X_values), [T_EXT]*len(X_values)]),
+        y=np.concatenate([[y_max]*len(X_values), [T_EXT]*len(X_values)]),
         fill='toself', fillcolor=red_fill,
         line=dict(color='rgba(0,0,0,0)'),
-        hoverinfo='skip', showlegend=False
+        hoverinfo='skip', name="Zona condensa (sopra T_EXT)"
     ))
 
-    # Curva DP(X)
-    fig2.add_trace(go.Scatter(
+    # Curva Dew Point (con nome esplicito)
+    fig.add_trace(go.Scatter(
         x=X_values, y=DP_vs_X,
         mode="lines", line=dict(color="blue", width=3),
-        name="Dew Point"
+        name="Curva Dew Point"
     ))
 
-    # Linee orizzontali
-    fig2.add_hline(y=DP_current, line_dash="dash", line_color="blue")
-    fig2.add_hline(y=T_min,      line_dash="dash", line_color="black")
-    fig2.add_hline(y=T_EXT,      line_dash="dash", line_color="orange")
+    # Linee orizzontali con nome (aggiunte come shape/linea con legenda tramite trace)
+    fig.add_trace(go.Scatter(
+        x=[X_values.min(), X_values.max()], y=[DP_current, DP_current],
+        mode="lines", line=dict(color="blue", width=2, dash="dash"),
+        name="Dew Point attuale (DP_current)"
+    ))
+    fig.add_trace(go.Scatter(
+        x=[X_values.min(), X_values.max()], y=[T_min, T_min],
+        mode="lines", line=dict(color="black", width=2, dash="dash"),
+        name="Temperatura minima trasporto (T_min)"
+    ))
+    fig.add_trace(go.Scatter(
+        x=[X_values.min(), X_values.max()], y=[T_EXT, T_EXT],
+        mode="lines", line=dict(color="orange", width=2, dash="dash"),
+        name="Temperatura esterna attuale (T_EXT)"
+    ))
 
     # Punto attuale
-    fig2.add_trace(go.Scatter(
+    fig.add_trace(go.Scatter(
         x=[X_current], y=[DP_current],
         mode="markers", marker=dict(size=12, color="black"),
         name="Punto attuale"
     ))
 
-    fig2.update_layout(
+    fig.update_layout(
         xaxis_title=x_label,
         yaxis_title="Temperatura (°C)",
-        yaxis=dict(range=[y2_min, y2_max]),
+        yaxis=dict(range=[y_min, y_max]),
         template="plotly_white",
-        title=None,
-        margin=dict(t=20, b=40, l=40, r=20)
+        title="Grafico",
+        margin=dict(t=40, b=40, l=40, r=20),
+        legend=dict(title="Legenda (consultazione)", orientation="v")
     )
 
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True)
 
 # -----------------------------
-# LEGENDA — spostata SOTTO i grafici
+# LEGENDA — spostata SOTTO i grafici (testo esplicativo)
 # -----------------------------
 st.markdown(
     """
     **Legenda grafici**  
-    - **Curva blu**: Dew Point calcolato in funzione dell'asse X.  
-    - **Tratteggiata blu**: Dew Point attuale (DP_current).  
-    - **Tratteggiata nera**: Temperatura minima di trasporto (T_min).  
-    - **Tratteggiata arancione**: Temperatura esterna attuale (T_EXT).  
+    - **Curva blu**: Curva Dew Point calcolato in funzione dell'asse X.  
+    - **Linea tratteggiata blu**: Dew Point attuale (DP_current).  
+    - **Linea tratteggiata nera**: Temperatura minima di trasporto (T_min).  
+    - **Linea tratteggiata arancione**: Temperatura esterna attuale (T_EXT).  
     - 🟢 **Area verde**: sotto T_min — conforme, nessun rischio.  
     - 🟡 **Area gialla**: tra T_min e T_EXT — rischio durante il trasporto.  
     - 🔴 **Area rossa**: sopra T_EXT — condensa immediata (non conforme).
