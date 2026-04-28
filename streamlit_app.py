@@ -10,79 +10,31 @@ st.title("Dew Point – Analisi per scelta diluizione")
 # -----------------------------
 # Stato iniziale
 # -----------------------------
-if "page" not in st.session_state:
-    st.session_state.page = "Home"
-
-if "show_options" not in st.session_state:
-    st.session_state.show_options = False
-
 if "temp_margin" not in st.session_state:
     st.session_state.temp_margin = 2.0
 
 if "humidity_margin" not in st.session_state:
     st.session_state.humidity_margin = 15
 
+if "show_options" not in st.session_state:
+    st.session_state.show_options = False
+
 DOC_PATH = pathlib.Path(__file__).parent / "documentation.html"
 has_doc = DOC_PATH.exists()
 
 # -----------------------------
-# CSS per trasformare il radio in due rettangoli
+# MENU A SINISTRA (sidebar)
 # -----------------------------
-st.markdown("""
-<style>
-
-div[role="radiogroup"] {
-    display: flex;
-    gap: 14px;
-    margin-bottom: 20px;
-}
-
-div[role="radiogroup"] > label {
-    flex: 0 0 auto;
-}
-
-div[role="radiogroup"] > label > div {
-    border-radius: 10px !important;
-    border: 2px solid #d0d0d0 !important;
-    padding: 10px 22px !important;
-    background: #ffffff !important;
-    color: #0b3d91 !important;
-    font-weight: 700 !important;
-    text-align: center;
-    min-width: 160px;
-    cursor: pointer;
-}
-
-div[role="radiogroup"] > label:hover > div {
-    background: #eef4ff !important;
-}
-
-/* selezionato */
-div[role="radiogroup"] > label[data-baseweb="radio"] input:checked + div {
-    background: linear-gradient(180deg,#0b5ed7,#084bb5) !important;
-    color: white !important;
-    border-color: #084bb5 !important;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-# -----------------------------
-# MENU A DUE RETTANGOLI
-# -----------------------------
-page = st.radio(
+page = st.sidebar.radio(
     "Menu",
     ["Home", "Documentazione"],
-    horizontal=True,
-    index=0 if st.session_state.page == "Home" else 1,
+    index=0,
 )
-
-st.session_state.page = page
 
 # -----------------------------
 # DOCUMENTAZIONE
 # -----------------------------
-if st.session_state.page == "Documentazione":
+if page == "Documentazione":
     if has_doc:
         html = DOC_PATH.read_text(encoding="utf-8")
         components.html(html, height=900, scrolling=True)
