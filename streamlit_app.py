@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 
 st.set_page_config(layout="wide")
 st.title("DewPoint & diluizione")
-st.subtitle("Per campionamento conforme a UNI 13725:2022")
+st.title("Per campionamento conforme a UNI 13725:2022")
 
 # -----------------------------
 # Inizializza session_state per opzioni persistenti
