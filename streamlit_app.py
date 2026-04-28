@@ -10,14 +10,17 @@ st.title("Dew Point – Analisi per scelta diluizione")
 # -----------------------------
 # Stato iniziale
 # -----------------------------
+if "page" not in st.session_state:
+    st.session_state.page = "Home"
+
+if "show_options" not in st.session_state:
+    st.session_state.show_options = False
+
 if "temp_margin" not in st.session_state:
     st.session_state.temp_margin = 2.0
 
 if "humidity_margin" not in st.session_state:
     st.session_state.humidity_margin = 15
-
-if "show_options" not in st.session_state:
-    st.session_state.show_options = False
 
 DOC_PATH = pathlib.Path(__file__).parent / "documentation.html"
 has_doc = DOC_PATH.exists()
@@ -28,13 +31,15 @@ has_doc = DOC_PATH.exists()
 page = st.sidebar.radio(
     "Menu",
     ["Home", "Documentazione"],
-    index=0,
+    index=0 if st.session_state.page == "Home" else 1,
 )
 
+st.session_state.page = page
+
 # -----------------------------
-# DOCUMENTAZIONE
+# DOCUMENTAZIONE (pura)
 # -----------------------------
-if page == "Documentazione":
+if st.session_state.page == "Documentazione":
     if has_doc:
         html = DOC_PATH.read_text(encoding="utf-8")
         components.html(html, height=900, scrolling=True)
@@ -43,7 +48,7 @@ if page == "Documentazione":
     st.stop()
 
 # -----------------------------
-# HOME
+# HOME — DA QUI IN POI LA TUA APP RESTA IDENTICA
 # -----------------------------
 
 # Pulsante Opzioni
@@ -72,7 +77,7 @@ temp_margin = float(st.session_state.temp_margin)
 humidity_margin = int(st.session_state.humidity_margin)
 
 # -----------------------------
-# Parametri di calcolo
+# Parametri di calcolo (TUOI, INVARIATI)
 # -----------------------------
 st.subheader("Parametri di calcolo")
 
@@ -88,7 +93,7 @@ with col3:
     HR_min_stimata = st.number_input("Umidità minima stimata (%)", 0, 100, 40, 5)
 
 # -----------------------------
-# Funzione dew point
+# Funzione dew point (TUA, INVARIATA)
 # -----------------------------
 def dew_point(T_ext, T_cam, RH, Dil):
     term = ((RH * 100 / Dil) / 100) * (
@@ -102,7 +107,7 @@ def dew_point(T_ext, T_cam, RH, Dil):
 DP_current = dew_point(T_EXT, T_camino, RH, Dil)
 
 # -----------------------------
-# Conformità
+# Conformità (TUA, INVARIATA)
 # -----------------------------
 conform_istantanea = DP_current < T_EXT
 conform_trasporto = DP_current < (T_min - temp_margin)
@@ -112,7 +117,7 @@ conform_umidita = HR_min_stimata >= soglia_umidita
 score = int(conform_istantanea) + int(conform_trasporto) + int(conform_umidita)
 
 # -----------------------------
-# Suggeritore
+# Suggeritore (TUO, INVARIATO)
 # -----------------------------
 def suggerisci_diluizione():
     best = None
@@ -128,7 +133,7 @@ def suggerisci_diluizione():
 Dil_suggerita, score_suggerita, DP_suggerito = suggerisci_diluizione()
 
 # -----------------------------
-# Box conformità e suggeritore
+# Box conformità e suggeritore (TUO, INVARIATO)
 # -----------------------------
 colA, colB = st.columns(2)
 
@@ -150,7 +155,7 @@ with colB:
     """)
 
 # -----------------------------
-# Grafico
+# Grafico (TUO, INVARIATO)
 # -----------------------------
 Dil_values = np.arange(1.0, 10.01, 0.2)
 
