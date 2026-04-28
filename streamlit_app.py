@@ -1,7 +1,4 @@
-# Dew Point – Analisi per scelta diluizione
-# Salva anche il file `documentation.html` (contenuto HTML fornito separatamente)
-# nella stessa cartella dello script per poterlo visualizzare dalla sezione Documentation.
-
+# Save as app.py (Streamlit app)
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
@@ -24,6 +21,39 @@ if "humidity_margin" not in st.session_state:
     st.session_state.humidity_margin = 15
 
 # -----------------------------
+# CSS per uniformare e allineare i pulsanti
+# - rende tutti i pulsanti visivamente identici
+# - migliora l'allineamento e la spaziatura
+# -----------------------------
+st.markdown(
+    """
+    <style>
+    /* Uniform button style */
+    div.stButton > button, div.row-widget.stButton > button {
+      background-color: #0b5ed7;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      box-shadow: none;
+      height: 40px;
+    }
+    div.stButton > button:hover, div.row-widget.stButton > button:hover {
+      background-color: #084bb5;
+    }
+    /* Make buttons in the same row vertically aligned */
+    .button-row { display:flex; gap:12px; align-items:center; }
+    /* Ensure the close button is visually consistent */
+    .close-btn { background-color:#6c757d !important; }
+    /* Container spacing */
+    .top-controls { margin-bottom: 12px; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# -----------------------------
 # Funzione dew point
 # -----------------------------
 def dew_point(T_ext, T_cam, RH, Dil):
@@ -36,39 +66,41 @@ def dew_point(T_ext, T_cam, RH, Dil):
     return (-430.22 + 237.7 * np.log(term / 100)) / (-np.log(term / 100) + 19.08)
 
 # -----------------------------
-# Pulsanti Opzioni e Documentation (affiancati)
-# Documentation apre a tutto schermo la pagina HTML se presente
+# Pulsanti Opzioni e Documentation affiancati e allineati
 # -----------------------------
-col_btn1, col_btn2, _ = st.columns([1, 1, 6])
 doc_path = pathlib.Path(__file__).parent / "documentation.html"
 has_doc = doc_path.exists()
 
-with col_btn1:
-    if st.button("Opzioni"):
-        st.session_state.show_options = not st.session_state.show_options
-
-with col_btn2:
-    if has_doc:
-        if st.button("Documentation"):
-            st.session_state.show_doc = not st.session_state.show_doc
-    else:
-        st.button("Documentation (file mancante)", disabled=True)
+# Use columns to align buttons; wrap in a container for spacing
+with st.container():
+    cols = st.columns([1,1,8])
+    with cols[0]:
+        if st.button("Opzioni"):
+            st.session_state.show_options = not st.session_state.show_options
+    with cols[1]:
+        if has_doc:
+            if st.button("Documentation"):
+                st.session_state.show_doc = not st.session_state.show_doc
+        else:
+            st.button("Documentation (manca)", disabled=True)
 
 # Se la documentazione è aperta, mostro il contenuto a tutto schermo e nascondo il resto
 if st.session_state.show_doc:
-    # Mostra un pulsante per chiudere la documentazione in alto
-    col_close1, col_close2 = st.columns([1, 9])
-    with col_close1:
-        if st.button("Chiudi documentazione"):
-            st.session_state.show_doc = False
+    # Close button (same visual style)
+    with st.container():
+        c1, c2 = st.columns([1, 9])
+        with c1:
+            # close button uses same st.button styling
+            if st.button("Chiudi documentazione"):
+                st.session_state.show_doc = False
+        with c2:
+            st.markdown("### Documentazione (visualizzazione a schermo intero)")
     # Carica e mostra l'HTML (se presente)
     if has_doc:
         html = doc_path.read_text(encoding="utf-8")
-        # Altezza generosa per occupare la maggior parte dello schermo
         components.html(html, height=900, scrolling=True)
     else:
         st.error("File documentation.html non trovato nella cartella dell'app.")
-    # Termina qui: non mostro il resto dell'interfaccia quando la doc è aperta
     st.stop()
 
 # -----------------------------
@@ -248,9 +280,7 @@ Dil_values = np.arange(1.0, 10.01, 0.2)
 # GRAFICO principale (ora chiamato "Grafico")
 # Asse X di default = "Diluizione", ma è selezionabile
 # -----------------------------
-col_graph = st.container()
-
-with col_graph:
+with st.container():
     asse_x = st.selectbox("Seleziona asse X (Grafico)", ["Diluizione", "RH", "T_camino", "T_EXT"], index=0)
 
     if asse_x == "Diluizione":
