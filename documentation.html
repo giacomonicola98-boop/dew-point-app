@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Documentation — Pre-diluizione e gestione campioni</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; line-height:1.5; color:#222; padding:20px; background:#fff; }
+    h1,h2,h3 { color:#0b3d91; margin-top:0; }
+    h2 { margin-bottom:6px; }
+    section { margin-bottom:18px; padding-bottom:6px; border-bottom:1px solid #eee; }
+    .note { background:#f9f9f9; border-left:4px solid #ffc107; padding:10px; margin:8px 0; }
+    ul { margin:6px 0 12px 20px; }
+    code { background:#f4f4f4; padding:2px 6px; border-radius:4px; font-size:0.95em; }
+  </style>
+</head>
+<body>
+  <h1>Pre-diluizione durante il campionamento e gestione dei campioni</h1>
+
+  <section>
+    <h2>Scopo della pre-diluizione</h2>
+    <ul>
+      <li>Evitare condensazione in apparecchiature e tubazioni</li>
+      <li>Prevenire condensazione nelle sacche durante campionamento, stoccaggio e trasporto</li>
+      <li>Ridurre concentrazioni pericolose a livelli accettabili</li>
+      <li>Abbassare la temperatura del campione</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Pre-diluizione statica</h2>
+    <p>Si riempie parzialmente la sacca con gas neutro secco prima del campionamento. Usare con cautela per fattori di diluizione &gt; 3. Verificare sempre il fattore di diluizione \(Z_v\).</p>
+  </section>
+
+  <section>
+    <h2>Pre-diluizione dinamica</h2>
+    <p>Si mescolano flussi di gas campione e gas neutro. La sonda può essere posizionata dentro o fuori il condotto. Se la caduta di temperatura può causare condensazione, riscaldare la sezione di ingresso. Il campione diluito viene immagazzinato in una sacca.</p>
+  </section>
+
+  <section>
+    <h2>Determinazione del fattore di diluizione</h2>
+    <h3>Basata su concentrazioni</h3>
+    <p>Calcolare \(Z_v\) dal rapporto tra la concentrazione dell'indicatore (es. ossigeno) nella sorgente e nel campione diluito. L'incertezza estesa deve essere &lt; 10%.</p>
+    <h3>Basata su portate</h3>
+    <p>Quando non influenzato da temperatura e pressione, \(Z_v\) può essere calcolato dalle portate: \(Z_v = (Q_t + Q_v) / Q_t\). Misurare portate prima e dopo il campionamento e usare i valori medi. L'incertezza estesa deve essere &lt; 10% e la variazione pre/post &lt; 15%.</p>
+  </section>
+
+  <section>
+    <h2>Trasporto e stoccaggio</h2>
+    <p>Analizzare i campioni il prima possibile. L'intervallo tra campionamento e analisi non deve superare 30 ore per convenzione. Mantenere la temperatura sopra il punto di rugiada e l'umidità interna vicino a quella esterna per minimizzare perdite di odoranti idrosolubili.</p>
+    <div class="note">
+      <strong>Note:</strong>
+      <ul>
+        <li>Alcuni composti mostrano recuperi bassi (H₂S, DMS, NH₃, acidi carbossilici).</li>
+        <li>Diffusione attraverso film polimerici è significativa per molecole a basso peso molecolare; considerare sacche multistrato o doppie.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <p style="font-size:0.9em;color:#666">Basato su estratti normativi relativi a procedure di pre-diluizione e gestione dei campioni.</p>
+  </footer>
+</body>
+</html>
