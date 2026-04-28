@@ -222,9 +222,12 @@ has_doc = doc_path.exists()
 page = st.sidebar.selectbox("Menu", ["Analisi", "Documentation"] if has_doc else ["Analisi"])
 
 if page == "Documentation":
-    html = doc_path.read_text(encoding="utf-8")
-    components.html(html, height=700, scrolling=True)
-else:
+    if has_doc:
+        html = doc_path.read_text(encoding="utf-8")
+        components.html(html, height=900, scrolling=True)
+    else:
+        st.error("File documentation.html non trovato.")
+    st.stop()
     # -----------------------------
     # Prepara valori per asse Diluizione (default)
     # -----------------------------
