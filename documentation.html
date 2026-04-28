@@ -1,20 +1,32 @@
+<!-- Save as documentation.html -->
 <!doctype html>
 <html lang="it">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Documentazione</title>
-   <footer>
-    <p style="font-size:0.9em;color:#666">Basato su estratto normativo EN 13725:2022 p.to 9.1.4</p>
+  <title>Documentation — Pre-diluizione e gestione campioni</title>
+ <footer>
+    <p>Basato su estratti normativi relativi a procedure di pre-diluizione e gestione dei campioni.</p>
   </footer>
+  <!-- MathJax per formattare correttamente formule matematiche come Z_v -->
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)'], ['$', '$']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
   <style>
-    body { font-family: Arial, Helvetica, sans-serif; line-height:1.5; color:#222; padding:20px; background:#fff; }
+    body { font-family: Arial, Helvetica, sans-serif; line-height:1.6; color:#222; padding:24px; background:#fff; }
     h1,h2,h3 { color:#0b3d91; margin-top:0; }
     h2 { margin-bottom:6px; }
-    section { margin-bottom:18px; padding-bottom:6px; border-bottom:1px solid #eee; }
-    .note { background:#f9f9f9; border-left:4px solid #ffc107; padding:10px; margin:8px 0; }
-    ul { margin:6px 0 12px 20px; }
+    section { margin-bottom:20px; padding-bottom:8px; border-bottom:1px solid #eee; }
+    .note { background:#f9f9f9; border-left:4px solid #ffc107; padding:12px; margin:12px 0; }
+    ul { margin:8px 0 14px 20px; }
     code { background:#f4f4f4; padding:2px 6px; border-radius:4px; font-size:0.95em; }
+    .eq { background:#f7faff; padding:8px; border-radius:6px; display:inline-block; margin:6px 0; }
+    footer { margin-top:18px; color:#666; font-size:0.95em; }
   </style>
 </head>
 <body>
@@ -32,33 +44,41 @@
 
   <section>
     <h2>Pre-diluizione statica</h2>
-    <p>Si riempie parzialmente la sacca con gas neutro secco prima del campionamento. Usare con cautela per fattori di diluizione &gt; 3. Verificare sempre il fattore di diluizione \(Z_v\).</p>
+    <p>Si riempie parzialmente la sacca con gas neutro secco prima del campionamento. Usare con cautela per fattori di diluizione &gt; 3. Verificare sempre il fattore di diluizione <span class="eq">\(Z_v\)</span>.</p>
   </section>
 
   <section>
     <h2>Pre-diluizione dinamica</h2>
-    <p>Si mescolano flussi di gas campione e gas neutro. La sonda può essere posizionata dentro o fuori il condotto. Se la caduta di temperatura può causare condensazione, riscaldare la sezione di ingresso. Il campione diluito viene immagazzinato in una sacca.</p>
+    <p>Si mescolano flussi di gas campione e gas neutro. La sonda può essere posizionata dentro o fuori il condotto. Se la caduta di temperatura può causare condensazione, riscaldare la sezione di ingresso. Il campione diluito viene immagazzinato in una sacca. L'apparato per la pre-diluizione dinamica è descritto nell'Appendice K.</p>
   </section>
 
   <section>
     <h2>Determinazione del fattore di diluizione</h2>
+
     <h3>Basata su concentrazioni</h3>
-    <p>Calcolare \(Z_v\) dal rapporto tra la concentrazione dell'indicatore (es. ossigeno) nella sorgente e nel campione diluito. L'incertezza estesa deve essere &lt; 10%.</p>
+    <p>Calcolare <span class="eq">\(Z_v\)</span> dal rapporto tra la concentrazione dell'indicatore (es. ossigeno) nella sorgente e nel campione diluito. Se l'indicatore è l'ossigeno e il gas neutro non contiene ossigeno, il fattore si ottiene come rapporto:</p>
+    <div class="eq">\(Z_v = \dfrac{C_m}{C_t}\)</div>
+    <p>L'incertezza estesa della misura del fattore di diluizione basata su misure di concentrazione deve essere inferiore al 10%.</p>
+
     <h3>Basata su portate</h3>
-    <p>Quando non influenzato da temperatura e pressione, \(Z_v\) può essere calcolato dalle portate: \(Z_v = (Q_t + Q_v) / Q_t\). Misurare portate prima e dopo il campionamento e usare i valori medi. L'incertezza estesa deve essere &lt; 10% e la variazione pre/post &lt; 15%.</p>
+    <p>Quando non influenzato da temperatura e pressione, <span class="eq">\(Z_v\)</span> può essere calcolato dalle portate:</p>
+    <div class="eq">\(Z_v = \dfrac{Q_t + Q_v}{Q_t}\)</div>
+    <p>Misurare portate prima e dopo il campionamento e usare i valori medi. L'incertezza estesa deve essere &lt; 10% e la variazione pre/post &lt; 15%.</p>
   </section>
 
   <section>
     <h2>Trasporto e stoccaggio</h2>
-    <p>Analizzare i campioni il prima possibile. L'intervallo tra campionamento e analisi non deve superare 30 ore per convenzione. Mantenere la temperatura sopra il punto di rugiada e l'umidità interna vicino a quella esterna per minimizzare perdite di odoranti idrosolubili.</p>
+    <p>Analizzare i campioni il prima possibile. L'intervallo tra campionamento e analisi non deve superare 30 ore, per convenzione. Mantenere la temperatura sopra il punto di rugiada e l'umidità interna vicino a quella esterna per minimizzare perdite di odoranti idrosolubili.</p>
+
     <div class="note">
       <strong>Note:</strong>
       <ul>
-        <li>Alcuni composti mostrano recuperi bassi (H₂S, DMS, NH₃, acidi carbossilici).</li>
-        <li>Diffusione attraverso film polimerici è significativa per molecole a basso peso molecolare; considerare sacche multistrato o doppie.</li>
+        <li>Alcuni composti mostrano recuperi bassi (H₂O, H₂S, DMS, composti solforati ridotti, NH₃, acidi carbossilici).</li>
+        <li>Diffusione attraverso film polimerici è significativa per molecole a basso peso molecolare; considerare sacche multistrato o doppie concentriche.</li>
       </ul>
     </div>
   </section>
 
+ 
 </body>
 </html>
