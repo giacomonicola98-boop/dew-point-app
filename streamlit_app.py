@@ -1,8 +1,4 @@
-# app.py
-# Dew Point – Analisi per scelta diluizione
-# Top horizontal menu with exactly two boxes: Home (default) and Documentazione.
-# When Documentazione is selected the app shows the raw HTML file (documentation.html)
-# below the menu and hides the rest of the UI. To return, click Home.
+# --- MENU A DUE CASELLE (Home / Documentazione) ---
 
 import streamlit as st
 import numpy as np
@@ -14,99 +10,113 @@ st.set_page_config(layout="wide")
 st.title("Dew Point – Analisi per scelta diluizione")
 
 # -----------------------------
-# Paths and initial state
+# Stato iniziale
 # -----------------------------
-DOC_PATH = pathlib.Path(__file__).parent / "documentation.html"
-has_doc = DOC_PATH.exists()
-
 if "page" not in st.session_state:
-    st.session_state.page = "Home"  # default
+    st.session_state.page = "Home"
 
-if "temp_margin" not in st.session_state:
-    st.session_state.temp_margin = 2.0
-if "humidity_margin" not in st.session_state:
-    st.session_state.humidity_margin = 15
 if "show_options" not in st.session_state:
     st.session_state.show_options = False
 
-# -----------------------------
-# Simple CSS to render two horizontal "boxes" that act like a menu
-# -----------------------------
-st.markdown(
-    """
-    <style>
-    .menu-row { display:flex; gap:12px; align-items:center; margin-bottom:14px; }
-    .menu-box {
-      padding:10px 20px;
-      border-radius:10px;
-      cursor:pointer;
-      font-weight:700;
-      border:2px solid #e6e6e6;
-      background:#ffffff;
-      color:#0b3d91;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-      min-width:160px;
-      text-align:center;
-      user-select:none;
-    }
-    .menu-box:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(11,61,145,0.06); }
-    .menu-box.active {
-      background: linear-gradient(180deg,#0b5ed7,#084bb5);
-      color: #fff;
-      border-color: rgba(8,75,181,0.9);
-    }
-    @media (max-width: 640px) {
-      .menu-row { flex-direction: column; gap:8px; }
-      .menu-box { min-width: auto; width:100%; }
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+if "temp_margin" not in st.session_state:
+    st.session_state.temp_margin = 2.0
+
+if "humidity_margin" not in st.session_state:
+    st.session_state.humidity_margin = 15
+
+DOC_PATH = pathlib.Path(__file__).parent / "documentation.html"
+has_doc = DOC_PATH.exists()
 
 # -----------------------------
-# Render the two menu boxes and wire them to session_state.page
-# We use Streamlit buttons (one per box) so clicks update state reliably.
+# CSS menu orizzontale
 # -----------------------------
-menu_cols = st.columns([1, 1, 8])
-with menu_cols[0]:
-    if st.button("Home"):
-        st.session_state.page = "Home"
-with menu_cols[1]:
-    # If documentation file is missing, still show the box but disable action
-    if has_doc:
-        if st.button("Documentazione"):
-            st.session_state.page = "Documentazione"
-    else:
-        # show a visually identical disabled button (no extra buttons elsewhere)
-        st.button("Documentazione (manca)", disabled=True)
+st.markdown("""
+<style>
+.menu-container {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+.menu-box {
+    padding: 10px 22px;
+    border-radius: 10px;
+    border: 2px solid #d0d0d0;
+    background: #ffffff;
+    color: #0b3d91;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    text-align: center;
+    min-width: 160px;
+}
+.menu-box:hover {
+    background: #f2f6ff;
+}
+.menu-box.active {
+    background: linear-gradient(180deg,#0b5ed7,#084bb5);
+    color: white;
+    border-color: #084bb5;
+}
+</style>
+""", unsafe_allow_html=True)
 
-# Visual highlight of active box (purely cosmetic)
-# We re-render a small HTML row showing which is active (keeps only two boxes visible)
+# -----------------------------
+# MENU VISIVO (HTML)
+# -----------------------------
 active_home = "active" if st.session_state.page == "Home" else ""
 active_doc  = "active" if st.session_state.page == "Documentazione" else ""
-st.markdown(
-    f"""
-    <div class="menu-row" aria-hidden="true">
-      <div class="menu-box {active_home}">Home</div>
-      <div class="menu-box {active_doc}">Documentazione</div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+
+st.markdown(f"""
+<div class="menu-container">
+    <div class="menu-box {active_home}" onclick="window.parent.document.querySelector('#btn_home').click()">Home</div>
+    <div class="menu-box {active_doc}" onclick="window.parent.document.querySelector('#btn_doc').click()">Documentazione</div>
+</div>
+""", unsafe_allow_html=True)
 
 # -----------------------------
-# If Documentazione selected: show raw HTML (pure) and stop further UI rendering
-# The top menu remains (so user can click Home to return).
+# BOTTONI INVISIBILI PER CAMBIARE PAGINA
+# -----------------------------
+colA, colB = st.columns([1,1])
+with colA:
+    if st.button("Home", key="btn_home"):
+        st.session_state.page = "Home"
+with colB:
+    if st.button("Documentazione", key="btn_doc"):
+        st.session_state.page = "Documentazione"
+
+# -----------------------------
+# PAGINA DOCUMENTAZIONE
 # -----------------------------
 if st.session_state.page == "Documentazione":
     if has_doc:
         html = DOC_PATH.read_text(encoding="utf-8")
-        # Render the HTML as-is (MathJax included in the file will work)
         components.html(html, height=900, scrolling=True)
     else:
-        st.error("File documentation.html non trovato nella cartella dell'app.")
-    st.stop()  # do not render any other UI when in Documentazione
+        st.error("File documentation.html non trovato.")
+    st.stop()
+
+# -----------------------------
+# PAGINA HOME (tutto il resto)
+# -----------------------------
+
+# Pulsante Opzioni
+if st.button("Opzioni"):
+    st.session_state.show_options = not st.session_state.show_options
+
+if st.session_state.show_options:
+    col1, col2 = st.columns(2)
+    with col1:
+        st.session_state.temp_margin = st.number_input(
+            "Margine temperatura (°C)", 0.0, 10.0,
+            float(st.session_state.temp_margin), 0.5
+        )
+    with col2:
+        st.session_state.humidity_margin = st.number_input(
+            "Margine umidità (%)", 0, 100,
+            int(st.session_state.humidity_margin), 1
+        )
+
+# --- QUI CONTINUA IL TUO CODICE ORIGINALE (calcoli, grafici, ecc.) ---
 
 # -----------------------------
 # HOME: main application UI (Opzioni più in basso come richiesto)
