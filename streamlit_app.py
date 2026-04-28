@@ -1,4 +1,9 @@
-# Save as app.py (Streamlit app)
+# app.py
+# Dew Point – Analisi per scelta diluizione
+# Usa un menu orizzontale in alto con due caselle: Home (default) e Documentazione.
+# Selezionando Documentazione viene mostrato a tutto schermo il file documentation.html (deve essere nella stessa cartella).
+# Quando si è in Home si trovano i controlli e, più in basso, il pulsante Opzioni.
+
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
@@ -9,103 +14,178 @@ st.set_page_config(layout="wide")
 st.title("Dew Point – Analisi per scelta diluizione")
 
 # -----------------------------
-# Inizializza session_state per opzioni persistenti e documentazione
+# Percorso file documentazione
 # -----------------------------
-if "show_options" not in st.session_state:
-    st.session_state.show_options = False
-if "show_doc" not in st.session_state:
-    st.session_state.show_doc = False
+DOC_PATH = pathlib.Path(__file__).parent / "documentation.html"
+has_doc = DOC_PATH.exists()
+
+# -----------------------------
+# Inizializza session_state
+# -----------------------------
 if "temp_margin" not in st.session_state:
     st.session_state.temp_margin = 2.0
 if "humidity_margin" not in st.session_state:
     st.session_state.humidity_margin = 15
+if "page" not in st.session_state:
+    st.session_state.page = "Home"  # default
 
 # -----------------------------
-# CSS per uniformare e allineare i pulsanti
-# - rende tutti i pulsanti visivamente identici
-# - migliora l'allineamento e la spaziatura
+# CSS per menu orizzontale e pulsanti coerenti
 # -----------------------------
 st.markdown(
     """
     <style>
-    /* Uniform button style */
-    div.stButton > button, div.row-widget.stButton > button {
+    /* Menu orizzontale: rendi le opzioni come due "caselle" affiancate */
+    .menu-row { display:flex; gap:12px; align-items:center; margin-bottom:12px; }
+    .menu-box {
+      padding:8px 18px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:700;
+      border:2px solid #e6e6e6;
+      background:#ffffff;
+      color:#0b3d91;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      min-width:140px;
+      text-align:center;
+    }
+    .menu-box:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(11,61,145,0.08); }
+    .menu-box.active {
+      background: linear-gradient(180deg,#0b5ed7,#084bb5);
+      color: #fff;
+      border-color: rgba(8,75,181,0.9);
+    }
+
+    /* Uniform button style for other buttons (Opzioni / Chiudi) */
+    .stButton>button, .stButton>div>button {
       background-color: #0b5ed7;
       color: white;
       border: none;
       padding: 8px 14px;
       border-radius: 8px;
       font-weight: 600;
-      box-shadow: none;
       height: 40px;
     }
-    div.stButton > button:hover, div.row-widget.stButton > button:hover {
-      background-color: #084bb5;
+    .stButton>button:hover, .stButton>div>button:hover { background-color: #084bb5; }
+
+    /* Close doc button variant */
+    .stButton>button.close { background-color: #6c757d; }
+    .stButton>button.close:hover { background-color: #5a6268; }
+
+    /* Small responsive tweak */
+    @media (max-width: 640px) {
+      .menu-row { flex-direction: column; gap:8px; }
+      .menu-box { min-width: auto; width:100%; }
     }
-    /* Make buttons in the same row vertically aligned */
-    .button-row { display:flex; gap:12px; align-items:center; }
-    /* Ensure the close button is visually consistent */
-    .close-btn { background-color:#6c757d !important; }
-    /* Container spacing */
-    .top-controls { margin-bottom: 12px; }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
 # -----------------------------
-# Funzione dew point
+# Render menu orizzontale (HTML + st.session_state management)
+# - Due to Streamlit limitations, usiamo HTML per l'aspetto e st.button per l'interazione.
+# - Creiamo due bottoni Streamlit nascosti e sincronizziamo lo stato con la UI HTML.
 # -----------------------------
-def dew_point(T_ext, T_cam, RH, Dil):
-    term = ((RH * 100 / Dil) / 100) * (
-        6.11 * 10 ** (
-            (7.5 * (T_cam * (100 / Dil) + T_ext * (100 - 100 / Dil)) / 100) /
-            (237.7 + (T_cam * (100 / Dil) + T_ext * (100 - 100 / Dil)) / 100)
+col_menu = st.container()
+with col_menu:
+    # Visual menu (HTML) - mostra lo stato attivo leggendo st.session_state.page
+    active_home = "active" if st.session_state.page == "Home" else ""
+    active_doc  = "active" if st.session_state.page == "Documentazione" else ""
+    menu_html = f"""
+      <div class="menu-row">
+        <div class="menu-box {active_home}" id="menu-home">Home</div>
+        <div class="menu-box {active_doc}" id="menu-doc">Documentazione</div>
+      </div>
+
+      <script>
+      const homeBox = window.parent.document.querySelector('#menu-home');
+      const docBox  = window.parent.document.querySelector('#menu-doc');
+
+      // When clicked, trigger a Streamlit button by creating a hidden form submit
+      homeBox && homeBox.addEventListener('click', () => {{
+        const btn = window.parent.document.querySelector('button[data-menu-action="set-home"]');
+        if(btn) btn.click();
+      }});
+      docBox && docBox.addEventListener('click', () => {{
+        const btn = window.parent.document.querySelector('button[data-menu-action="set-doc"]');
+        if(btn) btn.click();
+      }});
+      </script>
+    """
+    st.markdown(menu_html, unsafe_allow_html=True)
+
+    # Hidden Streamlit buttons used to change the page state (they are visible in DOM for the script)
+    # We add attributes via a tiny wrapper to identify them in the DOM.
+    # Clicking them updates st.session_state.page accordingly.
+    btn_col1, btn_col2 = st.columns([1,1])
+    with btn_col1:
+        # Home setter
+        if st.button("set-home", key="set_home_button"):
+            st.session_state.page = "Home"
+        # Add a data attribute to the rendered button element via JS injection
+        st.markdown(
+            """
+            <script>
+            (function(){
+              const btn = window.parent.document.querySelector('button[kind="primary"][data-testid="stButton"][aria-label="set-home"]');
+              if(btn) btn.setAttribute('data-menu-action','set-home');
+            })();
+            </script>
+            """,
+            unsafe_allow_html=True,
         )
-    )
-    return (-430.22 + 237.7 * np.log(term / 100)) / (-np.log(term / 100) + 19.08)
+    with btn_col2:
+        # Documentazione setter
+        if st.button("set-doc", key="set_doc_button"):
+            st.session_state.page = "Documentazione"
+        st.markdown(
+            """
+            <script>
+            (function(){
+              const btn = window.parent.document.querySelector('button[kind="primary"][data-testid="stButton"][aria-label="set-doc"]');
+              if(btn) btn.setAttribute('data-menu-action','set-doc');
+            })();
+            </script>
+            """,
+            unsafe_allow_html=True,
+        )
 
 # -----------------------------
-# Pulsanti Opzioni e Documentation affiancati e allineati
+# Sezione Documentazione (a tutto schermo) o Home (interfaccia principale)
 # -----------------------------
-doc_path = pathlib.Path(__file__).parent / "documentation.html"
-has_doc = doc_path.exists()
+if st.session_state.page == "Documentazione":
+    # Intestazione e pulsante chiudi (allineati)
+    header_cols = st.columns([1, 9])
+    with header_cols[0]:
+        # pulsante "Chiudi documentazione" coerente nello stile
+        if st.button("Chiudi documentazione"):
+            st.session_state.page = "Home"
+            st.experimental_rerun()
+    with header_cols[1]:
+        st.markdown("### Documentazione — visualizzazione a schermo intero")
 
-# Use columns to align buttons; wrap in a container for spacing
-with st.container():
-    cols = st.columns([1,1,8])
-    with cols[0]:
-        if st.button("Opzioni"):
-            st.session_state.show_options = not st.session_state.show_options
-    with cols[1]:
-        if has_doc:
-            if st.button("Documentation"):
-                st.session_state.show_doc = not st.session_state.show_doc
-        else:
-            st.button("Documentation (manca)", disabled=True)
-
-# Se la documentazione è aperta, mostro il contenuto a tutto schermo e nascondo il resto
-if st.session_state.show_doc:
-    # Close button (same visual style)
-    with st.container():
-        c1, c2 = st.columns([1, 9])
-        with c1:
-            # close button uses same st.button styling
-            if st.button("Chiudi documentazione"):
-                st.session_state.show_doc = False
-        with c2:
-            st.markdown("### Documentazione (visualizzazione a schermo intero)")
-    # Carica e mostra l'HTML (se presente)
     if has_doc:
-        html = doc_path.read_text(encoding="utf-8")
+        html = DOC_PATH.read_text(encoding="utf-8")
+        # Altezza generosa per occupare la maggior parte dello schermo
         components.html(html, height=900, scrolling=True)
     else:
         st.error("File documentation.html non trovato nella cartella dell'app.")
-    st.stop()
+    st.stop()  # non mostrare altro quando si è in Documentazione
 
 # -----------------------------
-# Sezione Opzioni persistente (sotto i pulsanti)
+# HOME: qui sotto trovi Opzioni e il resto dell'interfaccia
 # -----------------------------
+# Pulsante Opzioni (mostrato più in basso come richiesto)
+if "show_options" not in st.session_state:
+    st.session_state.show_options = False
+
+# Mostra il pulsante Opzioni in una posizione evidente ma non in alto
+opt_col1, opt_col2 = st.columns([1, 8])
+with opt_col1:
+    if st.button("Opzioni"):
+        st.session_state.show_options = not st.session_state.show_options
+
 if st.session_state.show_options:
     with st.container():
         st.markdown("**Margini di sicurezza (persistenti)**")
@@ -148,6 +228,18 @@ with col2:
 with col3:
     Dil = st.number_input("Diluizione", min_value=1.0, max_value=10.0, value=2.0, step=0.2, format="%.1f")
     HR_min_stimata = st.number_input("Umidità minima stimata (%)", min_value=0, max_value=100, value=40, step=5)
+
+# -----------------------------
+# Funzione dew point
+# -----------------------------
+def dew_point(T_ext, T_cam, RH, Dil):
+    term = ((RH * 100 / Dil) / 100) * (
+        6.11 * 10 ** (
+            (7.5 * (T_cam * (100 / Dil) + T_ext * (100 - 100 / Dil)) / 100) /
+            (237.7 + (T_cam * (100 / Dil) + T_ext * (100 - 100 / Dil)) / 100)
+        )
+    )
+    return (-430.22 + 237.7 * np.log(term / 100)) / (-np.log(term / 100) + 19.08)
 
 # -----------------------------
 # CALCOLI PRINCIPALI
