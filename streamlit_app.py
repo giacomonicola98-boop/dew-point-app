@@ -44,22 +44,6 @@ with st.sidebar:
 if page == "📄 Documentation":
     if has_doc:
         html_content = doc_path.read_text(encoding="utf-8")
-        # Rimuove padding Streamlit e mostra solo l'HTML a piena pagina
-        st.markdown("""
-            <style>
-                /* Nascondi titolo app e padding principale */
-                .block-container {
-                    padding-top: 0 !important;
-                    padding-bottom: 0 !important;
-                    padding-left: 0 !important;
-                    padding-right: 0 !important;
-                    max-width: 100% !important;
-                }
-                header[data-testid="stHeader"] {
-                    display: none !important;
-                }
-            </style>
-        """, unsafe_allow_html=True)
         components.html(html_content, height=950, scrolling=True)
     else:
         st.warning("⚠️ File `documentation.html` non trovato nella stessa cartella dello script.")
@@ -69,8 +53,8 @@ if page == "📄 Documentation":
 # ==============================
 # PAGINA: HOME
 # ==============================
-st.title("DewPoint e scelta diluizione")
-st.header("Per campionamento secondo UNI EN 13725")
+st.markdown("### DewPoint e scelta diluizione")
+st.caption("Per campionamento secondo UNI EN 13725")
 
 # -----------------------------
 # Pulsante Opzioni
@@ -107,13 +91,13 @@ humidity_margin = int(st.session_state.humidity_margin)
 # -----------------------------
 # PARAMETRI — 6 colonne compatte
 # -----------------------------
-st.subheader("Parametri di calcolo")
+st.markdown("**Parametri di calcolo**")
 
 c1, c2, c3, c4, c5, c6 = st.columns(6)
 with c1:
     T_ext = st.slider("T esterna (°C)", 0, 40, 20, 1)
 with c2:
-    T_min_stimata = st.slider("T min trasporto stimata(°C)", 0, 40, 5, 1)
+    T_min_stimata = st.slider("T min trasporto stimata (°C)", 0, 40, 5, 1)
 with c3:
     T_camino = st.slider("T camino (°C)", 0, 200, 100, 1)
 with c4:
@@ -165,50 +149,36 @@ else:
     bg_color, border_color = "#f8d7da", "#dc3545"
 
 # -----------------------------
-# BOX CONFORMITÀ + SUGGERITORE
+# BOX CONFORMITÀ + SUGGERITORE — compatti
 # -----------------------------
 col_box_left, col_box_right = st.columns(2)
 
 with col_box_left:
     st.markdown(f"""
-    <div style="padding:14px;border-radius:10px;background-color:{bg_color};
-                border:2px solid {border_color};font-size:15px;line-height:1.5;">
-      <h4 style="margin:0 0 8px 0;">Conformità</h4>
-      <p style="margin:6px 0;"><strong>Dew Point calcolato:</strong> {DP_current:.2f} °C</p>
-      <p style="margin:6px 0;">
-        <strong>Conformità istantanea</strong> (DP &lt; T_ext = {T_ext} °C):
-        <span style="font-weight:bold;color:{'green' if conform_istantanea else 'red'};">
-          {'✔' if conform_istantanea else '✘'}
-        </span>
-      </p>
-      <p style="margin:6px 0;">
-        <strong>Conformità trasporto</strong> (DP &lt; T_min_stimata − {temp_margin} = {T_min_stimata - temp_margin} °C):
-        <span style="font-weight:bold;color:{'green' if conform_trasporto else 'red'};">
-          {'✔' if conform_trasporto else '✘'}
-        </span>
-      </p>
-      <p style="margin:6px 0;">
-        <strong>Conformità umidità</strong> (UR_min ≥ RH/Dil + {humidity_margin}% = {soglia_umidita:.1f}%):
-        <span style="font-weight:bold;color:{'green' if conform_umidita else 'red'};">
-          {'✔' if conform_umidita else '✘'}
-        </span>
-      </p>
-      <hr style="margin:10px 0;">
-      <p style="margin:6px 0;"><strong>Conformità soddisfatte:</strong> {score} / 3</p>
+    <div style="padding:10px 12px;border-radius:8px;background-color:{bg_color};
+                border:2px solid {border_color};font-size:13px;line-height:1.6;">
+      <strong>Conformità</strong> &nbsp;|&nbsp; DP calcolato: <strong>{DP_current:.2f} °C</strong><br>
+      Istantanea (DP &lt; T_ext = {T_ext}°C):
+      <span style="font-weight:bold;color:{'green' if conform_istantanea else 'red'};">{'✔' if conform_istantanea else '✘'}</span>
+      &nbsp;&nbsp;
+      Trasporto (DP &lt; {T_min_stimata - temp_margin}°C):
+      <span style="font-weight:bold;color:{'green' if conform_trasporto else 'red'};">{'✔' if conform_trasporto else '✘'}</span>
+      &nbsp;&nbsp;
+      Umidità (UR_min ≥ {soglia_umidita:.1f}%):
+      <span style="font-weight:bold;color:{'green' if conform_umidita else 'red'};">{'✔' if conform_umidita else '✘'}</span>
+      <br><strong>Soddisfatte: {score} / 3</strong>
     </div>
     """, unsafe_allow_html=True)
 
 with col_box_right:
     st.markdown(f"""
-    <div style="padding:14px;border-radius:10px;background-color:#f7f7f7;
-                border:1px solid #ddd;font-size:15px;line-height:1.5;">
-      <h4 style="margin:0 0 8px 0;">Suggeritore diluizione</h4>
-      <p style="margin:6px 0;"><strong>Diluizione suggerita:</strong> {Dil_suggerita:.1f}</p>
-      <p style="margin:6px 0;"><strong>Dew Point previsto:</strong> {DP_suggerito:.2f} °C</p>
-      <hr style="margin:10px 0;">
-      <p style="margin:6px 0;"><strong>Parametri usati:</strong></p>
-      <p style="margin:4px 0;">Margine temperatura: {temp_margin} °C</p>
-      <p style="margin:4px 0;">Margine umidità: {humidity_margin} %</p>
+    <div style="padding:10px 12px;border-radius:8px;background-color:#f7f7f7;
+                border:1px solid #ddd;font-size:13px;line-height:1.6;">
+      <strong>Suggeritore diluizione</strong><br>
+      Diluizione suggerita: <strong>{Dil_suggerita:.1f}</strong>
+      &nbsp;&nbsp;
+      DP previsto: <strong>{DP_suggerito:.2f} °C</strong><br>
+      Margini — temperatura: {temp_margin} °C &nbsp;|&nbsp; umidità: {humidity_margin} %
     </div>
     """, unsafe_allow_html=True)
 
@@ -257,7 +227,6 @@ y_max = max(DP_vs_X.max(), T_ext, T_min_stimata) + 5
 # -----------------------------
 fig = go.Figure()
 
-# Zone colorate (fasce orizzontali fisse)
 fig.add_trace(go.Scatter(
     x=np.concatenate([X_values, X_values[::-1]]),
     y=np.concatenate([[T_min_stimata]*len(X_values), [y_min]*len(X_values)]),
@@ -280,15 +249,13 @@ fig.add_trace(go.Scatter(
     hoverinfo='skip', showlegend=False
 ))
 
-# Curva Dew Point
 fig.add_trace(go.Scatter(
     x=X_values, y=DP_vs_X,
     mode="lines",
     line=dict(color="royalblue", width=3),
-    name="Dew Point", showlegend=False
+    showlegend=False
 ))
 
-# Punto attuale con label
 fig.add_trace(go.Scatter(
     x=[X_current], y=[DP_current],
     mode="markers+text",
@@ -299,13 +266,11 @@ fig.add_trace(go.Scatter(
     showlegend=False
 ))
 
-# Linee tratteggiate + annotation inline
 x_end = X_values[-1]
-
 for y_val, color, label in [
-    (DP_current, "royalblue", f"DP attuale ({DP_current:.1f} °C)"),
-    (T_min_stimata,      "black",     f"T min trasporto ({T_min_stimata} °C)"),
-    (T_ext,      "darkorange",f"T esterna ({T_ext} °C)"),
+    (DP_current,    "royalblue",  f"DP attuale ({DP_current:.1f} °C)"),
+    (T_min_stimata, "black",      f"T min trasporto ({T_min_stimata} °C)"),
+    (T_ext,         "darkorange", f"T esterna ({T_ext} °C)"),
 ]:
     fig.add_shape(type="line",
         x0=X_values[0], x1=x_end,
@@ -319,12 +284,11 @@ for y_val, color, label in [
         bgcolor="rgba(255,255,255,0.75)", borderpad=2
     )
 
-# Label zone (a sinistra, centrate verticalmente)
 x_start = X_values[0]
 for y_lo, y_hi, emoji, label, color in [
-    (y_min, T_min_stimata, "✅", "Conforme",            "green"),
-    (T_min_stimata, T_ext, "⚠️", "Rischio trasporto",   "#b8860b"),
-    (T_ext, y_max, "❌", "Condensa immediata",  "red"),
+    (y_min,         T_min_stimata, "✅", "Conforme",           "green"),
+    (T_min_stimata, T_ext,         "⚠️", "Rischio trasporto",  "#b8860b"),
+    (T_ext,         y_max,         "❌", "Condensa immediata", "red"),
 ]:
     fig.add_annotation(
         x=x_start, y=(y_lo + y_hi) / 2,
