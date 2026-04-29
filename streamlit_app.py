@@ -69,7 +69,8 @@ if page == "📄 Documentation":
 # ==============================
 # PAGINA: HOME
 # ==============================
-st.title("Dew Point – Analisi per scelta diluizione")
+st.title("DewPoint e scelta diluizione")
+st.header("Per campionamento secondo UNI EN 13725")
 
 # -----------------------------
 # Pulsante Opzioni
@@ -110,11 +111,11 @@ st.subheader("Parametri di calcolo")
 
 c1, c2, c3, c4, c5, c6 = st.columns(6)
 with c1:
-    T_EXT = st.slider("T esterna (°C)", 0, 40, 20, 1)
+    T_ext = st.slider("T esterna (°C)", 0, 40, 20, 1)
 with c2:
-    T_min = st.slider("T min trasporto (°C)", 0, 40, 5, 1)
+    T_min_stimata = st.slider("T min trasporto stimata(°C)", 0, 40, 5, 1)
 with c3:
-    T_camino = st.slider("T camino (°C)", 0, 200, 100, 5)
+    T_camino = st.slider("T camino (°C)", 0, 200, 100, 1)
 with c4:
     RH = st.slider("Umidità rel. (%)", 5, 99, 50, 5)
 with c5:
@@ -125,10 +126,10 @@ with c6:
 # -----------------------------
 # CALCOLI
 # -----------------------------
-DP_current = dew_point(T_EXT, T_camino, RH, Dil)
+DP_current = dew_point(T_ext, T_camino, RH, Dil)
 
-conform_istantanea = DP_current < T_EXT
-conform_trasporto  = DP_current < (T_min - temp_margin)
+conform_istantanea = DP_current < T_ext
+conform_trasporto  = DP_current < (T_min_stimata - temp_margin)
 RH_post_dil        = RH / Dil
 soglia_umidita     = RH_post_dil + humidity_margin
 conform_umidita    = HR_min_stimata >= soglia_umidita
@@ -140,9 +141,9 @@ score              = int(conform_istantanea) + int(conform_trasporto) + int(conf
 def suggerisci_diluizione():
     candidates = []
     for d in np.arange(1.0, 10.01, 0.1):
-        dp = dew_point(T_EXT, T_camino, RH, d)
-        c1 = dp < T_EXT
-        c2 = dp < (T_min - temp_margin)
+        dp = dew_point(T_ext, T_camino, RH, d)
+        c1 = dp < T_ext
+        c2 = dp < (T_min_stimata - temp_margin)
         c3 = HR_min_stimata >= (RH / d + humidity_margin)
         s  = int(c1) + int(c2) + int(c3)
         candidates.append((round(d, 1), int(s), float(dp)))
@@ -156,9 +157,9 @@ Dil_suggerita, score_suggerita, DP_suggerito = suggerisci_diluizione()
 # -----------------------------
 # COLORE BOX CONFORMITÀ
 # -----------------------------
-if DP_current < T_min:
+if DP_current < T_min_stimata:
     bg_color, border_color = "#d4edda", "#28a745"
-elif DP_current < T_EXT:
+elif DP_current < T_ext:
     bg_color, border_color = "#fff3cd", "#ffc107"
 else:
     bg_color, border_color = "#f8d7da", "#dc3545"
@@ -175,13 +176,13 @@ with col_box_left:
       <h4 style="margin:0 0 8px 0;">Conformità</h4>
       <p style="margin:6px 0;"><strong>Dew Point calcolato:</strong> {DP_current:.2f} °C</p>
       <p style="margin:6px 0;">
-        <strong>Conformità istantanea</strong> (DP &lt; T_EXT = {T_EXT} °C):
+        <strong>Conformità istantanea</strong> (DP &lt; T_ext = {T_ext} °C):
         <span style="font-weight:bold;color:{'green' if conform_istantanea else 'red'};">
           {'✔' if conform_istantanea else '✘'}
         </span>
       </p>
       <p style="margin:6px 0;">
-        <strong>Conformità trasporto</strong> (DP &lt; T_min − {temp_margin} = {T_min - temp_margin} °C):
+        <strong>Conformità trasporto</strong> (DP &lt; T_min_stimata − {temp_margin} = {T_min_stimata - temp_margin} °C):
         <span style="font-weight:bold;color:{'green' if conform_trasporto else 'red'};">
           {'✔' if conform_trasporto else '✘'}
         </span>
@@ -229,27 +230,27 @@ asse_x = st.selectbox(
 
 if asse_x == "Diluizione":
     X_values  = np.arange(1.0, 10.01, 0.2)
-    DP_vs_X   = np.array([dew_point(T_EXT, T_camino, RH, d) for d in X_values])
+    DP_vs_X   = np.array([dew_point(T_ext, T_camino, RH, d) for d in X_values])
     x_label   = "Diluizione"
     X_current = Dil
 elif asse_x == "Umidità relativa (%)":
     X_values  = np.arange(5, 100, 1)
-    DP_vs_X   = np.array([dew_point(T_EXT, T_camino, rh, Dil) for rh in X_values])
+    DP_vs_X   = np.array([dew_point(T_ext, T_camino, rh, Dil) for rh in X_values])
     x_label   = "Umidità relativa (%)"
     X_current = RH
 elif asse_x == "Temperatura camino (°C)":
     X_values  = np.arange(0, 201, 2)
-    DP_vs_X   = np.array([dew_point(T_EXT, tcam, RH, Dil) for tcam in X_values])
+    DP_vs_X   = np.array([dew_point(T_ext, tcam, RH, Dil) for tcam in X_values])
     x_label   = "Temperatura camino (°C)"
     X_current = T_camino
 else:
     X_values  = np.arange(0, 41, 1)
     DP_vs_X   = np.array([dew_point(text, T_camino, RH, Dil) for text in X_values])
     x_label   = "Temperatura esterna (°C)"
-    X_current = T_EXT
+    X_current = T_ext
 
-y_min = min(DP_vs_X.min(), T_EXT, T_min) - 5
-y_max = max(DP_vs_X.max(), T_EXT, T_min) + 5
+y_min = min(DP_vs_X.min(), T_ext, T_min_stimata) - 5
+y_max = max(DP_vs_X.max(), T_ext, T_min_stimata) + 5
 
 # -----------------------------
 # GRAFICO con label inline
@@ -259,21 +260,21 @@ fig = go.Figure()
 # Zone colorate (fasce orizzontali fisse)
 fig.add_trace(go.Scatter(
     x=np.concatenate([X_values, X_values[::-1]]),
-    y=np.concatenate([[T_min]*len(X_values), [y_min]*len(X_values)]),
+    y=np.concatenate([[T_min_stimata]*len(X_values), [y_min]*len(X_values)]),
     fill='toself', fillcolor=green_fill,
     line=dict(color='rgba(0,0,0,0)'),
     hoverinfo='skip', showlegend=False
 ))
 fig.add_trace(go.Scatter(
     x=np.concatenate([X_values, X_values[::-1]]),
-    y=np.concatenate([[T_EXT]*len(X_values), [T_min]*len(X_values)]),
+    y=np.concatenate([[T_ext]*len(X_values), [T_min_stimata]*len(X_values)]),
     fill='toself', fillcolor=yellow_fill,
     line=dict(color='rgba(0,0,0,0)'),
     hoverinfo='skip', showlegend=False
 ))
 fig.add_trace(go.Scatter(
     x=np.concatenate([X_values, X_values[::-1]]),
-    y=np.concatenate([[y_max]*len(X_values), [T_EXT]*len(X_values)]),
+    y=np.concatenate([[y_max]*len(X_values), [T_ext]*len(X_values)]),
     fill='toself', fillcolor=red_fill,
     line=dict(color='rgba(0,0,0,0)'),
     hoverinfo='skip', showlegend=False
@@ -303,8 +304,8 @@ x_end = X_values[-1]
 
 for y_val, color, label in [
     (DP_current, "royalblue", f"DP attuale ({DP_current:.1f} °C)"),
-    (T_min,      "black",     f"T min trasporto ({T_min} °C)"),
-    (T_EXT,      "darkorange",f"T esterna ({T_EXT} °C)"),
+    (T_min_stimata,      "black",     f"T min trasporto ({T_min_stimata} °C)"),
+    (T_ext,      "darkorange",f"T esterna ({T_ext} °C)"),
 ]:
     fig.add_shape(type="line",
         x0=X_values[0], x1=x_end,
@@ -321,9 +322,9 @@ for y_val, color, label in [
 # Label zone (a sinistra, centrate verticalmente)
 x_start = X_values[0]
 for y_lo, y_hi, emoji, label, color in [
-    (y_min, T_min, "✅", "Conforme",            "green"),
-    (T_min, T_EXT, "⚠️", "Rischio trasporto",   "#b8860b"),
-    (T_EXT, y_max, "❌", "Condensa immediata",  "red"),
+    (y_min, T_min_stimata, "✅", "Conforme",            "green"),
+    (T_min_stimata, T_ext, "⚠️", "Rischio trasporto",   "#b8860b"),
+    (T_ext, y_max, "❌", "Condensa immediata",  "red"),
 ]:
     fig.add_annotation(
         x=x_start, y=(y_lo + y_hi) / 2,
