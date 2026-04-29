@@ -258,54 +258,60 @@ fig.add_trace(go.Scatter(
 
 fig.add_trace(go.Scatter(
     x=[X_current], y=[DP_current],
-    mode="markers+text",
-    marker=dict(size=12, color="black"),
-    text=[f"  DP = {DP_current:.1f} °C"],
-    textposition="middle right",
-    textfont=dict(size=12, color="black"),
-    showlegend=False
+    mode="markers",
+    marker=dict(size=14, color="black", symbol="circle",
+                line=dict(color="white", width=2)),
+    name=f"Punto attuale (DP={DP_current:.1f}°C)",
+    showlegend=True
 ))
 
+# Linee tratteggiate come trace con nome (visibili in legenda)
 x_end = X_values[-1]
 for y_val, color, label in [
-    (DP_current,    "royalblue",  f"DP attuale ({DP_current:.1f} °C)"),
-    (T_min_stimata, "black",      f"T min trasporto ({T_min_stimata} °C)"),
-    (T_ext,         "darkorange", f"T esterna ({T_ext} °C)"),
+    (DP_current,    "royalblue",  f"DP attuale: {DP_current:.1f} °C"),
+    (T_min_stimata, "black",      f"T min trasporto: {T_min_stimata} °C"),
+    (T_ext,         "darkorange", f"T esterna: {T_ext} °C"),
 ]:
-    fig.add_shape(type="line",
-        x0=X_values[0], x1=x_end,
-        y0=y_val, y1=y_val,
-        line=dict(color=color, dash="dash", width=1.5)
-    )
-    fig.add_annotation(
-        x=x_end, y=y_val,
-        text=label, showarrow=False,
-        xanchor="left", font=dict(color=color, size=11),
-        bgcolor="rgba(255,255,255,0.75)", borderpad=2
-    )
+    fig.add_trace(go.Scatter(
+        x=[X_values[0], x_end],
+        y=[y_val, y_val],
+        mode="lines",
+        line=dict(color=color, dash="dash", width=1.5),
+        name=label,
+        showlegend=True
+    ))
 
+# Label zone colorate — solo a sinistra, non escono a destra
 x_start = X_values[0]
 for y_lo, y_hi, emoji, label, color in [
     (y_min,         T_min_stimata, "✅", "Conforme",           "green"),
     (T_min_stimata, T_ext,         "⚠️", "Rischio trasporto",  "#b8860b"),
     (T_ext,         y_max,         "❌", "Condensa immediata", "red"),
 ]:
-    fig.add_annotation(
-        x=x_start, y=(y_lo + y_hi) / 2,
-        text=f"{emoji} {label}", showarrow=False,
-        xanchor="left", font=dict(color=color, size=11),
-        bgcolor="rgba(255,255,255,0.7)", borderpad=2
-    )
+    if y_hi > y_lo:
+        fig.add_annotation(
+            x=x_start, y=(y_lo + y_hi) / 2,
+            text=f"{emoji} {label}", showarrow=False,
+            xanchor="left", font=dict(color=color, size=12),
+            bgcolor="rgba(255,255,255,0.75)", borderpad=3
+        )
 
 fig.update_layout(
     xaxis_title=x_label,
-    yaxis_title="Temperatura (°C)",
+    yaxis_title="T (°C)",
     yaxis=dict(range=[y_min, y_max]),
-    xaxis=dict(range=[X_values[0], X_values[-1] * 1.18]),
+    xaxis=dict(range=[X_values[0], X_values[-1]]),
     template="plotly_white",
-    margin=dict(t=30, b=40, l=50, r=150),
-    showlegend=False,
-    height=450
+    margin=dict(t=10, b=40, l=45, r=10),
+    legend=dict(
+        orientation="h",
+        yanchor="top", y=-0.2,
+        xanchor="left", x=0,
+        font=dict(size=11),
+        bgcolor="rgba(255,255,255,0.8)"
+    ),
+    showlegend=True,
+    height=400
 )
 
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, use_container_width=True, config={"responsive": True})
