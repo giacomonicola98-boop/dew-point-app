@@ -6,18 +6,11 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-# CSS globale — nasconde header e azzera padding su tutte le pagine
+# CSS globale — nasconde solo l'header di Streamlit
 st.markdown("""
     <style>
         header[data-testid="stHeader"] {
             display: none !important;
-        }
-        .block-container {
-            padding-top: 0.5rem !important;
-            padding-bottom: 0 !important;
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
-            max-width: 100% !important;
         }
     </style>
 """, unsafe_allow_html=True)
