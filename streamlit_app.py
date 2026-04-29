@@ -6,15 +6,6 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-# CSS globale — nasconde solo l'header di Streamlit
-st.markdown("""
-    <style>
-        header[data-testid="stHeader"] {
-            display: none !important;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
 # -----------------------------
 # Inizializza session_state
 # -----------------------------
@@ -53,6 +44,22 @@ with st.sidebar:
 if page == "📄 Documentation":
     if has_doc:
         html_content = doc_path.read_text(encoding="utf-8")
+        # Rimuove padding Streamlit e mostra solo l'HTML a piena pagina
+        st.markdown("""
+            <style>
+                /* Nascondi titolo app e padding principale */
+                .block-container {
+                    padding-top: 0 !important;
+                    padding-bottom: 0 !important;
+                    padding-left: 0 !important;
+                    padding-right: 0 !important;
+                    max-width: 100% !important;
+                }
+                header[data-testid="stHeader"] {
+                    display: none !important;
+                }
+            </style>
+        """, unsafe_allow_html=True)
         components.html(html_content, height=950, scrolling=True)
     else:
         st.warning("⚠️ File `documentation.html` non trovato nella stessa cartella dello script.")
@@ -250,6 +257,7 @@ y_max = max(DP_vs_X.max(), T_ext, T_min_stimata) + 5
 # -----------------------------
 fig = go.Figure()
 
+# Zone colorate (fasce orizzontali fisse)
 fig.add_trace(go.Scatter(
     x=np.concatenate([X_values, X_values[::-1]]),
     y=np.concatenate([[T_min_stimata]*len(X_values), [y_min]*len(X_values)]),
@@ -272,6 +280,7 @@ fig.add_trace(go.Scatter(
     hoverinfo='skip', showlegend=False
 ))
 
+# Curva Dew Point
 fig.add_trace(go.Scatter(
     x=X_values, y=DP_vs_X,
     mode="lines",
@@ -279,6 +288,7 @@ fig.add_trace(go.Scatter(
     name="Dew Point", showlegend=False
 ))
 
+# Punto attuale con label
 fig.add_trace(go.Scatter(
     x=[X_current], y=[DP_current],
     mode="markers+text",
@@ -289,11 +299,13 @@ fig.add_trace(go.Scatter(
     showlegend=False
 ))
 
+# Linee tratteggiate + annotation inline
 x_end = X_values[-1]
+
 for y_val, color, label in [
-    (DP_current,   "royalblue",  f"DP attuale ({DP_current:.1f} °C)"),
-    (T_min_stimata,"black",      f"T min trasporto ({T_min_stimata} °C)"),
-    (T_ext,        "darkorange", f"T esterna ({T_ext} °C)"),
+    (DP_current, "royalblue", f"DP attuale ({DP_current:.1f} °C)"),
+    (T_min_stimata,      "black",     f"T min trasporto ({T_min_stimata} °C)"),
+    (T_ext,      "darkorange",f"T esterna ({T_ext} °C)"),
 ]:
     fig.add_shape(type="line",
         x0=X_values[0], x1=x_end,
@@ -307,11 +319,12 @@ for y_val, color, label in [
         bgcolor="rgba(255,255,255,0.75)", borderpad=2
     )
 
+# Label zone (a sinistra, centrate verticalmente)
 x_start = X_values[0]
 for y_lo, y_hi, emoji, label, color in [
-    (y_min,        T_min_stimata, "✅", "Conforme",           "green"),
-    (T_min_stimata, T_ext,        "⚠️", "Rischio trasporto",  "#b8860b"),
-    (T_ext,        y_max,         "❌", "Condensa immediata", "red"),
+    (y_min, T_min_stimata, "✅", "Conforme",            "green"),
+    (T_min_stimata, T_ext, "⚠️", "Rischio trasporto",   "#b8860b"),
+    (T_ext, y_max, "❌", "Condensa immediata",  "red"),
 ]:
     fig.add_annotation(
         x=x_start, y=(y_lo + y_hi) / 2,
